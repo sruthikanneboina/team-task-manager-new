@@ -16,17 +16,25 @@ app.use(express.json())
 
 const SECRET = process.env.JWT_SECRET || "secretkey"
 
-function auth(req, res, next) {
+app.get("/", (req, res) => {
+  res.send("Backend Running")
+})
 
-  const token = req.headers.authorization
+/* =========================
+   AUTH MIDDLEWARE
+========================= */
 
-  if (!token) {
-    return res.status(401).json({
-      message: "No token"
-    })
-  }
+const auth = async (req, res, next) => {
 
   try {
+
+    const token = req.headers.authorization
+
+    if (!token) {
+      return res.status(401).json({
+        message: "No token"
+      })
+    }
 
     const decoded = jwt.verify(token, SECRET)
 
@@ -34,7 +42,7 @@ function auth(req, res, next) {
 
     next()
 
-  } catch {
+  } catch (err) {
 
     res.status(401).json({
       message: "Invalid token"
@@ -43,11 +51,12 @@ function auth(req, res, next) {
   }
 }
 
-app.get("/", (req, res) => {
-  res.send("Backend Running")
-})
+/* =========================
+   REGISTER
+========================= */
 
 app.post("/register", async (req, res) => {
+
   try {
 
     const { name, email, password } = req.body
@@ -85,7 +94,12 @@ app.post("/register", async (req, res) => {
   }
 })
 
+/* =========================
+   LOGIN
+========================= */
+
 app.post("/login", async (req, res) => {
+
   try {
 
     const { email, password } = req.body
@@ -135,15 +149,20 @@ app.post("/login", async (req, res) => {
   }
 })
 
+/* =========================
+   CREATE TASK
+========================= */
+
 app.post("/tasks", auth, async (req, res) => {
+
   try {
 
     const { title } = req.body
 
     const newTask = new Task({
       title,
-      completed: false,
-      userId: req.userId
+      user: req.userId,
+      completed: false
     })
 
     await newTask.save()
@@ -164,11 +183,16 @@ app.post("/tasks", auth, async (req, res) => {
   }
 })
 
+/* =========================
+   GET TASKS
+========================= */
+
 app.get("/tasks", auth, async (req, res) => {
+
   try {
 
     const tasks = await Task.find({
-      userId: req.userId
+      user: req.userId
     })
 
     res.json(tasks)
@@ -184,31 +208,12 @@ app.get("/tasks", auth, async (req, res) => {
   }
 })
 
-app.put("/tasks/:id", auth, async (req, res) => {
-  try {
-
-    const task = await Task.findById(req.params.id)
-
-    task.completed = !task.completed
-
-    await task.save()
-
-    res.json({
-      task
-    })
-
-  } catch (err) {
-
-    console.log(err)
-
-    res.status(500).json({
-      message: "Server Error"
-    })
-
-  }
-})
+/* =========================
+   DELETE TASK
+========================= */
 
 app.delete("/tasks/:id", auth, async (req, res) => {
+
   try {
 
     await Task.findByIdAndDelete(req.params.id)
@@ -227,6 +232,37 @@ app.delete("/tasks/:id", auth, async (req, res) => {
 
   }
 })
+
+/* =========================
+   UPDATE TASK STATUS
+========================= */
+
+app.put("/tasks/:id", auth, async (req, res) => {
+
+  try {
+
+    const task = await Task.findById(req.params.id)
+
+    task.completed = !task.completed
+
+    await task.save()
+
+    res.json(task)
+
+  } catch (err) {
+
+    console.log(err)
+
+    res.status(500).json({
+      message: "Server Error"
+    })
+
+  }
+})
+
+/* =========================
+   DATABASE
+========================= */
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
