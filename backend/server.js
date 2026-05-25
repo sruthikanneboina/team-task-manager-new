@@ -17,9 +17,13 @@ app.use(express.json())
 
 const SECRET = process.env.JWT_SECRET || "secretkey"
 
+// HOME
+
 app.get("/", (req, res) => {
   res.send("Backend Running")
 })
+
+// REGISTER
 
 app.post("/register", async (req, res) => {
   try {
@@ -58,6 +62,9 @@ app.post("/register", async (req, res) => {
 
   }
 })
+
+// LOGIN
+
 app.post("/login", async (req, res) => {
   try {
 
@@ -71,7 +78,10 @@ app.post("/login", async (req, res) => {
       })
     }
 
-    const isMatch = await bcrypt.compare(password, user.password)
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    )
 
     if (!isMatch) {
       return res.status(400).json({
@@ -104,6 +114,9 @@ app.post("/login", async (req, res) => {
 
   }
 })
+
+// CREATE TASK
+
 app.post("/tasks", async (req, res) => {
   try {
 
@@ -130,6 +143,28 @@ app.post("/tasks", async (req, res) => {
 
   }
 })
+
+// GET TASKS
+
+app.get("/tasks", async (req, res) => {
+  try {
+
+    const tasks = await Task.find()
+
+    res.json(tasks)
+
+  } catch (err) {
+
+    console.log(err)
+
+    res.status(500).json({
+      message: "Server Error"
+    })
+
+  }
+})
+
+// DATABASE + SERVER
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
