@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 
 function App() {
 
@@ -14,10 +14,6 @@ function App() {
   const [tasks, setTasks] = useState([])
 
   const user = JSON.parse(localStorage.getItem("user"))
-
-  const token = localStorage.getItem("token")
-
-  // REGISTER + LOGIN
 
   const handleSubmit = async () => {
 
@@ -44,23 +40,15 @@ function App() {
     }
 
     if (data.token) {
-
       localStorage.setItem("token", data.token)
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      )
-
+      localStorage.setItem("user", JSON.stringify(data.user))
       window.location.reload()
     }
   }
 
-  // FETCH TASKS
+  const token = localStorage.getItem("token")
 
   const fetchTasks = async () => {
-
-    if (!token) return
 
     const response = await fetch(
       "https://team-task-manager-new-production-14b7.up.railway.app/tasks",
@@ -79,14 +67,12 @@ function App() {
   }
 
   useEffect(() => {
-    fetchTasks()
+    if (user) {
+      fetchTasks()
+    }
   }, [])
 
-  // CREATE TASK
-
   const createTask = async () => {
-
-    if (!taskTitle) return
 
     const response = await fetch(
       "https://team-task-manager-new-production-14b7.up.railway.app/tasks",
@@ -104,15 +90,10 @@ function App() {
 
     const data = await response.json()
 
-    if (data.task) {
+    setTasks([...tasks, data.task])
 
-      setTasks([...tasks, data.task])
-
-      setTaskTitle("")
-    }
+    setTaskTitle("")
   }
-
-  // DELETE TASK
 
   const deleteTask = async (id) => {
 
@@ -129,12 +110,9 @@ function App() {
     setTasks(tasks.filter((task) => task._id !== id))
   }
 
-  // DASHBOARD
-
   if (user) {
 
     return (
-
       <div style={{ padding: 40 }}>
 
         <h1>Dashboard</h1>
@@ -144,11 +122,8 @@ function App() {
         <p>{user.email}</p>
 
         <button onClick={() => {
-
           localStorage.clear()
-
           window.location.reload()
-
         }}>
           Logout
         </button>
@@ -172,7 +147,6 @@ function App() {
         <h2>Tasks</h2>
 
         {tasks.map((task) => (
-
           <div
             key={task._id}
             style={{
@@ -181,35 +155,25 @@ function App() {
               marginBottom: 10
             }}
           >
-
             <h3>{task.title}</h3>
 
-            <button
-              onClick={() => deleteTask(task._id)}
-            >
+            <button onClick={() => deleteTask(task._id)}>
               Delete
             </button>
-
           </div>
-
         ))}
 
       </div>
     )
   }
 
-  // LOGIN + REGISTER UI
-
   return (
-
     <div style={{ padding: 40 }}>
 
       <h1>Team Task Manager</h1>
 
       {!isLogin && (
-
         <>
-
           <input
             placeholder="Name"
             value={name}
@@ -217,7 +181,6 @@ function App() {
           />
 
           <br /><br />
-
         </>
       )}
 
