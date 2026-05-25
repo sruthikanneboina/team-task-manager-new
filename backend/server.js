@@ -58,6 +58,52 @@ app.post("/register", async (req, res) => {
 
   }
 })
+app.post("/login", async (req, res) => {
+  try {
+
+    const { email, password } = req.body
+
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found"
+      })
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password)
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid password"
+      })
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      SECRET,
+      { expiresIn: "7d" }
+    )
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    })
+
+  } catch (err) {
+
+    console.log(err)
+
+    res.status(500).json({
+      message: "Server Error"
+    })
+
+  }
+})
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
