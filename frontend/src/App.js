@@ -1,222 +1,169 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react";
 
 function App() {
+  const [tasks, setTasks] = useState([]);
+  const [taskInput, setTaskInput] = useState("");
 
-  const [isLogin, setIsLogin] = useState(false)
+  const user = {
+    name: "Sruthi",
+    email: "sruthi9810@gmail.com",
+  };
 
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const addTask = () => {
+    if (taskInput.trim() === "") return;
 
-  const [message, setMessage] = useState("")
+    const newTask = {
+      id: Date.now(),
+      title: taskInput,
+      completed: false,
+    };
 
-  const [taskTitle, setTaskTitle] = useState("")
-  const [tasks, setTasks] = useState([])
+    setTasks([...tasks, newTask]);
+    setTaskInput("");
+  };
 
-  const user = JSON.parse(localStorage.getItem("user"))
+  const deleteTask = (id) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
 
-  const handleSubmit = async () => {
+  const toggleTask = (id) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === id
+          ? { ...task, completed: !task.completed }
+          : task
+      )
+    );
+  };
 
-    const url = isLogin
-      ? "https://team-task-manager-new-production-14b7.up.railway.app/login"
-      : "https://team-task-manager-new-production-14b7.up.railway.app/register"
-
-    const bodyData = isLogin
-      ? { email, password }
-      : { name, email, password }
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(bodyData)
-    })
-
-    const data = await response.json()
-
-    if (data.message) {
-      setMessage(data.message)
-    }
-
-    if (data.token) {
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
-      window.location.reload()
-    }
-  }
-
-  const token = localStorage.getItem("token")
-
-  const fetchTasks = async () => {
-
-    const response = await fetch(
-      "https://team-task-manager-new-production-14b7.up.railway.app/tasks",
-      {
-        headers: {
-          authorization: token
-        }
-      }
-    )
-
-    const data = await response.json()
-
-    if (Array.isArray(data)) {
-      setTasks(data)
-    }
-  }
-
-  useEffect(() => {
-    if (user) {
-      fetchTasks()
-    }
-  }, [])
-
-  const createTask = async () => {
-
-    const response = await fetch(
-      "https://team-task-manager-new-production-14b7.up.railway.app/tasks",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: token
-        },
-        body: JSON.stringify({
-          title: taskTitle
-        })
-      }
-    )
-
-    const data = await response.json()
-
-    setTasks([...tasks, data.task])
-
-    setTaskTitle("")
-  }
-
-  const deleteTask = async (id) => {
-
-    await fetch(
-      `https://team-task-manager-new-production-14b7.up.railway.app/tasks/${id}`,
-      {
-        method: "DELETE",
-        headers: {
-          authorization: token
-        }
-      }
-    )
-
-    setTasks(tasks.filter((task) => task._id !== id))
-  }
-
-  if (user) {
-
-    return (
-      <div style={{ padding: 40 }}>
-
-        <h1>Dashboard</h1>
+  return (
+    <div
+      style={{
+        padding: "40px",
+        fontFamily: "Arial",
+        backgroundColor: "#f4f6f8",
+        minHeight: "100vh",
+      }}
+    >
+      <div
+        style={{
+          background: "white",
+          padding: "30px",
+          borderRadius: "10px",
+          maxWidth: "700px",
+          margin: "auto",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h1 style={{ color: "#222" }}>Dashboard</h1>
 
         <h2>Welcome {user.name}</h2>
-
         <p>{user.email}</p>
 
-        <button onClick={() => {
-          localStorage.clear()
-          window.location.reload()
-        }}>
+        <button
+          style={{
+            padding: "10px 20px",
+            border: "none",
+            backgroundColor: "#ff4d4f",
+            color: "white",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
           Logout
         </button>
 
-        <hr />
+        <hr style={{ margin: "30px 0" }} />
 
         <h2>Create Task</h2>
 
-        <input
-          placeholder="Task title"
-          value={taskTitle}
-          onChange={(e) => setTaskTitle(e.target.value)}
-        />
+        <div style={{ display: "flex", gap: "10px" }}>
+          <input
+            type="text"
+            placeholder="Task title"
+            value={taskInput}
+            onChange={(e) => setTaskInput(e.target.value)}
+            style={{
+              flex: 1,
+              padding: "10px",
+              borderRadius: "5px",
+              border: "1px solid #ccc",
+            }}
+          />
 
-        <button onClick={createTask}>
-          Add Task
-        </button>
+          <button
+            onClick={addTask}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#1890ff",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Add Task
+          </button>
+        </div>
 
-        <hr />
+        <hr style={{ margin: "30px 0" }} />
 
         <h2>Tasks</h2>
 
-        {tasks.map((task) => (
-          <div
-            key={task._id}
-            style={{
-              border: "1px solid gray",
-              padding: 10,
-              marginBottom: 10
-            }}
-          >
-            <h3>{task.title}</h3>
+        {tasks.length === 0 ? (
+          <p>No tasks available</p>
+        ) : (
+          tasks.map((task) => (
+            <div
+              key={task.id}
+              style={{
+                background: "#fafafa",
+                padding: "15px",
+                marginTop: "10px",
+                borderRadius: "5px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => toggleTask(task.id)}
+                />
 
-            <button onClick={() => deleteTask(task._id)}>
-              Delete
-            </button>
-          </div>
-        ))}
+                <span
+                  style={{
+                    marginLeft: "10px",
+                    textDecoration: task.completed
+                      ? "line-through"
+                      : "none",
+                  }}
+                >
+                  {task.title}
+                </span>
+              </div>
 
+              <button
+                onClick={() => deleteTask(task.id)}
+                style={{
+                  backgroundColor: "red",
+                  color: "white",
+                  border: "none",
+                  padding: "6px 10px",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          ))
+        )}
       </div>
-    )
-  }
-
-  return (
-    <div style={{ padding: 40 }}>
-
-      <h1>Team Task Manager</h1>
-
-      {!isLogin && (
-        <>
-          <input
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <br /><br />
-        </>
-      )}
-
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      <br /><br />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={handleSubmit}>
-        {isLogin ? "Login" : "Register"}
-      </button>
-
-      <br /><br />
-
-      <button onClick={() => setIsLogin(!isLogin)}>
-        {isLogin
-          ? "Go To Register"
-          : "Go To Login"}
-      </button>
-
-      <h2>{message}</h2>
-
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
