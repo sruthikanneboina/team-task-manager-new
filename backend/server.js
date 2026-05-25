@@ -8,7 +8,6 @@ const jwt = require("jsonwebtoken")
 
 const User = require("./models/User")
 const Task = require("./models/Task")
-const Project = require("./models/Project")
 
 const app = express()
 
@@ -17,13 +16,9 @@ app.use(express.json())
 
 const SECRET = process.env.JWT_SECRET || "secretkey"
 
-// HOME
-
 app.get("/", (req, res) => {
   res.send("Backend Running")
 })
-
-// REGISTER
 
 app.post("/register", async (req, res) => {
   try {
@@ -62,8 +57,6 @@ app.post("/register", async (req, res) => {
 
   }
 })
-
-// LOGIN
 
 app.post("/login", async (req, res) => {
   try {
@@ -115,8 +108,6 @@ app.post("/login", async (req, res) => {
   }
 })
 
-// CREATE TASK
-
 app.post("/tasks", async (req, res) => {
   try {
 
@@ -144,8 +135,6 @@ app.post("/tasks", async (req, res) => {
   }
 })
 
-// GET TASKS
-
 app.get("/tasks", async (req, res) => {
   try {
 
@@ -164,7 +153,25 @@ app.get("/tasks", async (req, res) => {
   }
 })
 
-// DATABASE + SERVER
+app.delete("/tasks/:id", async (req, res) => {
+  try {
+
+    await Task.findByIdAndDelete(req.params.id)
+
+    res.json({
+      message: "Task deleted"
+    })
+
+  } catch (err) {
+
+    console.log(err)
+
+    res.status(500).json({
+      message: "Server Error"
+    })
+
+  }
+})
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
