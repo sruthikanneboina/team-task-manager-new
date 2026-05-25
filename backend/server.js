@@ -104,6 +104,32 @@ app.post("/login", async (req, res) => {
 
   }
 })
+app.post("/tasks", async (req, res) => {
+  try {
+
+    const { title } = req.body
+
+    const newTask = new Task({
+      title
+    })
+
+    await newTask.save()
+
+    res.json({
+      message: "Task created",
+      task: newTask
+    })
+
+  } catch (err) {
+
+    console.log(err)
+
+    res.status(500).json({
+      message: "Server Error"
+    })
+
+  }
+})
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
