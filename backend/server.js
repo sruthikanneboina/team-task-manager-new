@@ -16,6 +16,33 @@ app.use(express.json())
 
 const SECRET = process.env.JWT_SECRET || "secretkey"
 
+function auth(req, res, next) {
+
+  const token = req.headers.authorization
+
+  if (!token) {
+    return res.status(401).json({
+      message: "No token"
+    })
+  }
+
+  try {
+
+    const decoded = jwt.verify(token, SECRET)
+
+    req.userId = decoded.id
+
+    next()
+
+  } catch {
+
+    res.status(401).json({
+      message: "Invalid token"
+    })
+
+  }
+}
+
 app.get("/", (req, res) => {
   res.send("Backend Running")
 })
@@ -108,13 +135,15 @@ app.post("/login", async (req, res) => {
   }
 })
 
-app.post("/tasks", async (req, res) => {
+app.post("/tasks", auth, async (req, res) => {
   try {
 
     const { title } = req.body
 
     const newTask = new Task({
-      title
+      title,
+      completed: false,
+      userId: req.userId
     })
 
     await newTask.save()
@@ -135,10 +164,12 @@ app.post("/tasks", async (req, res) => {
   }
 })
 
-app.get("/tasks", async (req, res) => {
+app.get("/tasks", auth, async (req, res) => {
   try {
 
-    const tasks = await Task.find()
+    const tasks = await Task.find({
+      userId: req.userId
+    })
 
     res.json(tasks)
 
@@ -153,7 +184,31 @@ app.get("/tasks", async (req, res) => {
   }
 })
 
-app.delete("/tasks/:id", async (req, res) => {
+app.put("/tasks/:id", auth, async (req, res) => {
+  try {
+
+    const task = await Task.findById(req.params.id)
+
+    task.completed = !task.completed
+
+    await task.save()
+
+    res.json({
+      task
+    })
+
+  } catch (err) {
+
+    console.log(err)
+
+    res.status(500).json({
+      message: "Server Error"
+    })
+
+  }
+})
+
+app.delete("/tasks/:id", auth, async (req, res) => {
   try {
 
     await Task.findByIdAndDelete(req.params.id)
